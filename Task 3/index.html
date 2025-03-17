@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #282c34;
+            color: white;
+        }
+        .game-container {
+            text-align: center;
+        }
+        .mode-select {
+            margin-bottom: 15px;
+            padding: 12px 24px;
+            color: lightseagreen;
+            font-size: 1.5em;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 120px);
+            grid-gap: 10px;
+            margin-top: 20px;
+        }
+        .cell {
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            background: #61dafb;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .cell:hover {
+            background: #21a1f1;
+        }
+        .status {
+            margin-top: 20px;
+            font-size: 1.8em;
+        }
+        .reset, .mode-select {
+            margin-top: 10px;
+            padding: 12px 24px;
+            color: lightseagreen;
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 style="font-size: 3em;">Tic-Tac-Toe</h1>
+        <button class="mode-select" onclick="toggleMode()">Switch to Two-Player Mode</button>
+        <div class="board" id="board"></div>
+        <div class="status" id="status">Player X's Turn</div>
+        <button class="reset" onclick="resetGame()">Restart</button>
+    </div>
+    
+    <script>
+        let board = document.getElementById("board");
+        let statusText = document.getElementById("status");
+        let modeButton = document.querySelector(".mode-select");
+        let cells = [];
+        let currentPlayer = "X";
+        let boardState = Array(9).fill(null);
+        let aiMode = true;
+
+        function createBoard() {
+            board.innerHTML = "";
+            boardState = Array(9).fill(null);
+            cells = [];
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.dataset.index = i;
+                cell.addEventListener("click", handleClick, { once: true });
+                board.appendChild(cell);
+                cells.push(cell);
+            }
+            if (aiMode && currentPlayer === "O") {
+                setTimeout(aiMove, 500);
+            }
+        }
+        
+        function handleClick(event) {
+            const index = event.target.dataset.index;
+            if (boardState[index]) return;
+            
+            boardState[index] = currentPlayer;
+            event.target.textContent = currentPlayer;
+            
+            if (checkWinner()) {
+                statusText.textContent = `Player ${currentPlayer} Wins!`;
+                disableBoard();
+                return;
+            }
+            
+            if (!boardState.includes(null)) {
+                statusText.textContent = "It's a Draw!";
+                return;
+            }
+            
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            statusText.textContent = `Player ${currentPlayer}'s Turn`;
+            
+            if (aiMode && currentPlayer === "O") {
+                setTimeout(aiMove, 500);
+            }
+        }
+
+        function checkWinner() {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+            return winPatterns.some(pattern => {
+                const [a, b, c] = pattern;
+                return boardState[a] && boardState[a] === boardState[b] && boardState[a] === boardState[c];
+            });
+        }
+
+        function disableBoard() {
+            cells.forEach(cell => cell.removeEventListener("click", handleClick));
+        }
+
+        function resetGame() {
+            currentPlayer = "X";
+            statusText.textContent = "Player X's Turn";
+            createBoard();
+        }
+
+        function toggleMode() {
+            aiMode = !aiMode;
+            modeButton.textContent = aiMode ? "Switch to Two-Player Mode" : "Switch to AI Mode";
+            resetGame();
+        }
+
+        function aiMove() {
+            let emptyCells = boardState.map((val, idx) => val === null ? idx : null).filter(val => val !== null);
+            if (emptyCells.length === 0) return;
+            let move = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            
+            boardState[move] = "O";
+            cells[move].textContent = "O";
+            cells[move].removeEventListener("click", handleClick);
+            
+            if (checkWinner()) {
+                statusText.textContent = "AI Wins!";
+                disableBoard();
+                return;
+            }
+            
+            if (!boardState.includes(null)) {
+                statusText.textContent = "It's a Draw!";
+                return;
+            }
+            
+            currentPlayer = "X";
+            statusText.textContent = "Player X's Turn";
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>
